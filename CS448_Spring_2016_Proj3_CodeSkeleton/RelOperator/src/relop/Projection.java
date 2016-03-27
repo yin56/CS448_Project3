@@ -68,10 +68,26 @@ public class Projection extends Iterator {
    */
   public boolean hasNext() {
 	  //next.s
+	 /*
 	 proj = new Tuple(schema);
+	 Schema newSchema = new Schema(field.length);
+	 for (int i = 0; i < field.length; i++){
+		 
+		 newSchema.initField(i, type, length, name);
+	 }
+	 */
 	  //result.print();
 	  while(it.hasNext()){
 		  next = it.getNext();
+		  
+		  Schema projSchema = new Schema(field.length);
+
+		  for (int i = 0; i < field.length; i++){			  
+				  projSchema.initField(i, this.schema, field[i]);
+		  }
+		  
+		  proj = new Tuple(projSchema);
+		  
 		  for(int i = 0; i < field.length; i++){
 			  //System.out.print(next.getField(field[i]).getClass().toString() +"\n");
 			 proj.setField(field[i], next.getField(field[i])); 
