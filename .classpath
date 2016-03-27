@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="CS448_Spring_2016_Proj3_CodeSkeleton/RelOperator/src"/>
+	<classpathentry kind="lib" path="CS448_Spring_2016_Proj3_CodeSkeleton/RelOperator/lib/bufmgr.jar"/>
+	<classpathentry kind="lib" path="CS448_Spring_2016_Proj3_CodeSkeleton/RelOperator/lib/diskmgr.jar"/>
+	<classpathentry kind="lib" path="CS448_Spring_2016_Proj3_CodeSkeleton/RelOperator/lib/heap.jar"/>
+	<classpathentry kind="lib" path="CS448_Spring_2016_Proj3_CodeSkeleton/RelOperator/lib/index.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="output" path="CS448_Spring_2016_Proj3_CodeSkeleton/RelOperator/bin"/>
+</classpath>
