@@ -1,8 +1,12 @@
 package relop;
 
+import java.io.File;
+
 import global.RID;
+import global.SearchKey;
 import heap.HeapFile;
 import index.HashIndex;
+import index.HashScan;
 
 public class HashJoin extends Iterator {
 	
@@ -61,42 +65,110 @@ public class HashJoin extends Iterator {
 	//@Override
 	public boolean hasNext() {
 		// TODO Auto-generated method stub
+		IndexScan innerScan;
+		IndexScan outerScan;
 		
-		//right now im trying to figure how to convert all the non-indexscan iterators
-		//into indexscans, then we need use indexscan to put them into buckets
-		//not sure about the stuff after that, but we need to follow the hashjoin algorithm in the book
+		//HashIndex tempIndex = new HashIndex(null); 
+		HashIndex indexInputInner = new HashIndex(null);
+		HashIndex indexInputOuter = new HashIndex(null); 
+		//HeapFile tempFile = new HeapFile(null);
+		HeapFile fileInputInner = new HeapFile(null);
+		HeapFile fileInputOuter = new HeapFile(null);
 		
-		HashIndex tempIndex = new HashIndex(null); 
-		HeapFile tempFile = new HeapFile(null);
-		//KeyScan keyScan = new KeyScan(schema, tempIndex, null, tempFile);
-		//Projection proj = new Projection(inner, 1);
-		FileScan exfile = new FileScan(schema, tempFile) ;
 		
-		//Selection select = new Selection(inner, null);
-
-		//dexScan indexScan = new IndexScan(schema, tempIndex, tempFile);
-		
-		if(inner.getClass().equals(exfile.getClass())){
-			System.out.print("Both are fileScans\n");
+		//check if inner is FileScan
+		//create 
+		if(inner instanceof IndexScan){
+			//do nothing,already have heapfile and indexfile 
+			innerScan = (IndexScan) inner;
+		}
+		else if(inner instanceof FileScan){
+			//need to generate the indexfile from the FileScan
+			System.out.print("inner is fileScan\n");
 			HeapFile nHeap;
-			nHeap = ((FileScan)inner).getHeapFile();
-			RID rec = new RID();
-			nHeap.selectRecord(rec);
-			
+			nHeap = ((FileScan)inner).returnHeapFile();
+			fileInputInner = nHeap;
+			FileScan tempScan = new FileScan(schema, nHeap);
+			int i = 0;
+			while(inner.hasNext()){
+				inner.getNext(); //get the tuple from inner
+				RID rec = new RID(); //new RID
+				rec = tempScan.getLastRID(); //get the RID
+				System.out.print("Rec is " + rec + "\n");
+				indexInputInner.insertEntry(new SearchKey(i),rec); //finally get insert into indexFile needed
+				i++;
+			}
+		}
+		else{
+			int i = 0;
+			while(inner.hasNext()){
+				Tuple next = inner.getNext();
+				RID rid = fileInputInner.insertRecord(next.getData()); //insert into tempHeapFile
+				indexInputInner.insertEntry(new SearchKey(i), rid); //insert intp tempIndexFile
+				i++;
+			}
+		}
 		
-			
-			//convert inner fileScan to IndexScan
-		
-	
+		if(outer instanceof IndexScan){
+			//do nothing,already have heapfile and indexfile
+			//indexInputOuter = outer;
+			outerScan = (IndexScan) outer;
+		}
+		else if(outer instanceof FileScan){
+			System.out.print("outer is fileScan\n");
+			HeapFile nHeap;
+			nHeap = ((FileScan)outer).returnHeapFile();
+			fileInputOuter = nHeap;
+			FileScan tempScan = new FileScan(schema, nHeap);
+			int i = 0;
+			while(outer.hasNext()){
+				outer.getNext(); //get the tuple from inner
+				RID rec = new RID(); //new RID
+				rec = tempScan.getLastRID(); //get the RID
+				indexInputInner.insertEntry(new SearchKey(i),rec); //finally get insert into indexFile needed
+				i++;
+			}
 			
 		}
-		//indexScan.
+		else{
+			int i = 0;
+			while(outer.hasNext()){
+				Tuple next = outer.getNext();
+				RID rid = fileInputOuter.insertRecord(next.getData()); //insert into tempHeapFile
+				indexInputOuter.insertEntry(new SearchKey(i), rid); //insert intp tempIndexFile
+				i++;
+			}
+			
+		}
 		
-		//convert filescan to indexscan
-		//System.out.print(outer.getClass().getName());
+		//construct IndexScans for probing
+		innerScan = new IndexScan(schema, indexInputInner, fileInputInner);
+		outerScan = new IndexScan(schema, indexInputOuter, fileInputOuter);
+		
+		System.out.print("Finished converting\n");
+		
+		HashTableDup table = new HashTableDup();
+		while(innerScan.hasNext() && outerScan.hasNext()){
+			//probe
+			int i = 0;
+			while(inner.hasNext()){
+				table.add(new SearchKey(i), inner.getNext());
+				i++;
+			}
+			int j = 0;
+			while(outer.hasNext()){
+				//table.getAll(key);
+			}
+			//while(t)
+		}
 		
 		
 		
+		
+		//after all conversion, create the indexscan
+		//IndexScan  scan1 = new In
+		
+		/*
 		if(!nextTupleConsumed){
 			return true;
 		}
@@ -112,11 +184,10 @@ public class HashJoin extends Iterator {
 			startJoin = false;
 		}
 		
+		*/
 		
 		//leftTuple.
-		while(outer.hasNext()){
-		//	temp.insertEntry(arg0, arg1);
-		}
+		
 			
 		return false;
 	}
