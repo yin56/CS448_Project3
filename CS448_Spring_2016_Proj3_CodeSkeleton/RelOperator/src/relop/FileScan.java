@@ -12,22 +12,20 @@ import global.PageId;
  */
 public class FileScan extends Iterator {
 
-	private Schema schema;
-	private HeapScan scan;
-	
+	private HeapScan scan;	
 	private boolean isOpen;
 	private int indentDepth;
 	private RID mostRecentRID;
-	private HeapFile originalFile;
+	private HeapFile file;
 	
 	
   /**
    * Constructs a file scan, given the schema and heap file.
    */
   public FileScan(Schema schema, HeapFile file) {
-	  super.setSchema(schema);
-	  originalFile = file;
-	  scan = file.openScan();
+	  this.schema = schema;
+	  this.file = file;
+	  this.scan = file.openScan();
 	  isOpen = true;
 	  indentDepth = 0;
   }
@@ -47,7 +45,7 @@ public class FileScan extends Iterator {
    */
   public void restart() {
 	  super.setSchema(schema);
-	  scan = originalFile.openScan();
+	  scan = file.openScan();
 	  isOpen = true;
 	  indentDepth = 0;
   }
@@ -80,13 +78,15 @@ public class FileScan extends Iterator {
    * @throws IllegalStateException if no more tuples
    */
   public Tuple getNext() {
-	  
+	  	    
 	  if (hasNext() == false){
 		  throw new IllegalStateException("No more tuples");
 	  }	  
 	  else{		 
 		  RID rid = new RID();
-		  Tuple tuple = new Tuple(schema, scan.getNext(rid));	  
+		  scan.getNext(rid);
+		  Tuple tuple = new Tuple(schema, file.selectRecord(rid));
+		  		  
 		  mostRecentRID = rid;
 		  return tuple;
 	  }
@@ -98,6 +98,10 @@ public class FileScan extends Iterator {
    */
   public RID getLastRID() {
 	  return mostRecentRID;
+  }
+  
+  public HeapFile returnHeapFile(){
+	  return this.file;
   }
 
 } // public class FileScan extends Iterator

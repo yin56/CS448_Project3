@@ -18,10 +18,17 @@ public class Projection extends Iterator {
    */
   public Projection(Iterator iter, Integer... fields) {
 	  System.out.print("Constructing Projection\n");
-	  this.schema = iter.getSchema();
 	  this.field = fields;
 	  this.it = iter;
-    //throw new UnsupportedOperationException("Not implemented");
+	  
+
+	  Schema projSchema = new Schema(field.length);
+
+	  for (int i = 0; i < field.length; i++){			  
+			  projSchema.initField(i, iter.schema, field[i]);
+	  }
+	  this.schema = projSchema;
+
   }
 
   /**
@@ -68,31 +75,25 @@ public class Projection extends Iterator {
    */
   public boolean hasNext() {
 	  //next.s
-	 /*
-	 proj = new Tuple(schema);
-	 Schema newSchema = new Schema(field.length);
-	 for (int i = 0; i < field.length; i++){
-		 
-		 newSchema.initField(i, type, length, name);
-	 }
-	 */
+	  
+	  /*
+	  Schema projSchema = new Schema(field.length);
+	  for (int i = 0; i < field.length; i++){			  
+			  projSchema.initField(i, this.schema, field[i]);
+	  }	 
+	  */
+	  
 	  //result.print();
 	  while(it.hasNext()){
 		  next = it.getNext();
+		  proj = new Tuple(this.schema); // proj is the one to be returned
 		  
-		  Schema projSchema = new Schema(field.length);
-
-		  for (int i = 0; i < field.length; i++){			  
-				  projSchema.initField(i, this.schema, field[i]);
-		  }
-		  
-		  proj = new Tuple(projSchema);
 		  
 		  for(int i = 0; i < field.length; i++){
-			  //System.out.print(next.getField(field[i]).getClass().toString() +"\n");
-			 proj.setField(field[i], next.getField(field[i])); 
+			  proj.setField(i, next.getField(field[i])); 
 		  }
-		  //proj = result;
+		  
+		  
 		  consumed = true;
 		  return true;
 	  }

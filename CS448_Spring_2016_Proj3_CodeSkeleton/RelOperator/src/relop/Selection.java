@@ -13,7 +13,6 @@ public class Selection extends Iterator {
 
 	private int indentDepth;
 	private Predicate [] preds;
-	private Schema schema;
 	private Iterator iter;
 
 	
@@ -26,9 +25,8 @@ public class Selection extends Iterator {
   public Selection(Iterator iter, Predicate... preds) {
 	  this.preds = preds;
 	  this.iter = iter;
-	  schema = iter.getSchema();
+	  this.schema = iter.getSchema();
 	  indentDepth = 0;
-
   }
 
   /**
@@ -76,30 +74,39 @@ public class Selection extends Iterator {
    * @throws IllegalStateException if no more tuples
    */
   public Tuple getNext() {
+	  	    
+	  if (hasNext() == false){
+		  throw new IllegalStateException("No more tuples");
+	  }
 	  
-	  Tuple tuple = null;
+	  Tuple tuple = new Tuple(this.schema);
 	  boolean haveMatchingTuple = false;
 	  
 	  while(haveMatchingTuple == false){
-	  
-	  if (hasNext() == false){
-		  throw new IllegalStateException("No more tuples");
-	  }	  
-	  else{		 	
+	  	 
+		  if (hasNext() == false){
+			  throw new IllegalStateException("No more tuples");
+		  }
+		  
 		  tuple = iter.getNext();
-		  boolean doesTupleMatch = true;
+		  		  
+		  boolean doesTupleMatch = false;
 		  for (int i = 0; i < preds.length; i++){
+			  
 			  Predicate tempPredicate = preds[i];
-			  if (tempPredicate.validate(schema)){
-				  if (tempPredicate.evaluate(tuple) == false){
-					  doesTupleMatch = false;
+			  
+			  //System.out.println(tempPredicate.toString());
+			  
+			  //if (tempPredicate.validate(schema)){
+				  if (tempPredicate.evaluate(tuple) == true){				 
+					  doesTupleMatch = true;
+					  return tuple;
 				  }
-			  }
+			  //}
 		  }//for
 		  if (doesTupleMatch){
 			  haveMatchingTuple = true;
 		  }
-	   }//else
 	 }//while 
 	  return tuple;
   }
