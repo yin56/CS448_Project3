@@ -14,6 +14,8 @@ public class Selection extends Iterator {
 	private int indentDepth;
 	private Predicate [] preds;
 	private Iterator iter;
+	private Tuple next;
+	private boolean consumed;
 
 	
   /**
@@ -27,6 +29,7 @@ public class Selection extends Iterator {
 	  this.iter = iter;
 	  this.schema = iter.getSchema();
 	  indentDepth = 0;
+	  consumed = true;
   }
 
   /**
@@ -44,6 +47,7 @@ public class Selection extends Iterator {
    */
   public void restart() {
 	  iter.restart();
+	  consumed = true;
 	  indentDepth = 0;
   }
 
@@ -65,7 +69,39 @@ public class Selection extends Iterator {
    * Returns true if there are more tuples, false otherwise.
    */
   public boolean hasNext() {
-    return iter.hasNext();
+    //return iter.hasNext();
+	  
+	  if(!consumed){
+		  return true;
+	  }
+	  Tuple tuple = new Tuple(this.schema);
+	  boolean haveMatchingTuple = false;
+	  
+	  while(haveMatchingTuple == false && iter.hasNext()){
+	  	 
+		  tuple = iter.getNext();
+		  		  
+		  boolean doesTupleMatch = false;
+		  for (int i = 0; i < preds.length; i++){
+			  
+			  Predicate tempPredicate = preds[i];
+			  
+			  //System.out.println(tempPredicate.toString());
+			  
+			  //if (tempPredicate.validate(schema)){
+				  if (tempPredicate.evaluate(tuple) == true){				 
+					  doesTupleMatch = true;
+					  next = tuple;
+					  consumed = false;
+					  return true;
+				  }
+			  //}
+		  }//for
+		  if (doesTupleMatch){
+			  haveMatchingTuple = true;
+		  }
+	  }
+	  return false;
   }
 
   /**
@@ -74,8 +110,14 @@ public class Selection extends Iterator {
    * @throws IllegalStateException if no more tuples
    */
   public Tuple getNext() {
-	  	    
-	  if (hasNext() == false){
+	  
+	  consumed = true;
+	  return next;
+	  
+	 
+	  
+	  //	    
+	  /*if (hasNext() == false){
 		  throw new IllegalStateException("No more tuples");
 	  }
 	  
@@ -108,7 +150,7 @@ public class Selection extends Iterator {
 			  haveMatchingTuple = true;
 		  }
 	 }//while 
-	  return tuple;
+	  return tuple;*/
   }
 
 } // public class Selection extends Iterator
