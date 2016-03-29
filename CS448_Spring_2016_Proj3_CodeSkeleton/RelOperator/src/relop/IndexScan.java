@@ -16,12 +16,12 @@ public class IndexScan extends Iterator {
 	HeapFile file;
 	boolean open = false;
 	private BucketScan scan;
-	private SearchKey key;
+	private static SearchKey key;
 	boolean consumed;
-	int hash;
+	static int hash;
 	Tuple next;
 	boolean noMore = false;
-	int numBuckets = 0;
+	static int numBuckets = 0;
 
   /**
    * Constructs an index scan, given the hash index and schema.
@@ -50,15 +50,11 @@ public class IndexScan extends Iterator {
    * Restarts the iterator, i.e. as if it were just constructed.
    */
   public void restart() {
-	  if(isOpen() == true){
-		  close();
-		  scan = index.openScan();
-		  open = true;
-	  }
-	  else{
-		  scan = index.openScan();
-		  open = true;
-	  }
+	  
+	  super.setSchema(schema);
+	  scan = index.openScan();
+	  consumed = true;
+	  open = true;
     //throw new UnsupportedOperationException("Not implemented");
   }
 
@@ -88,22 +84,30 @@ public class IndexScan extends Iterator {
    * Returns true if there are more tuples, false otherwise.
    */
   public boolean hasNext() {
-	  if(scan.hasNext() == true){
-		  noMore = false;
-		  RID record = new RID();
-		  record = scan.getNext();
-		  //file.selectRecord(record);
-		  Tuple tup = new Tuple(schema, file.selectRecord(record));
-		  hash = scan.getNextHash();
-		  //hash = nhash;
-		  key = scan.getLastKey();
-		  numBuckets++;
-		  next = tup;
+	  //System.out.print("indexScan hasNext\n");
+	  
+	  if(!consumed){
 		  return true;
 	  }
-	  else{
-		  noMore = true;
+	  if(scan.hasNext() == false){
+		  System.out.print("false\n");
+		  consumed = true;
 		  return false;
+	  }
+	  else{
+		  //System.out.print("true\n");
+		  RID record = new RID();
+		  record = scan.getNext();
+		  Tuple tup = new Tuple(schema, file.selectRecord(record));
+		  //tup.print();
+		  hash = scan.getNextHash();
+		  key = scan.getLastKey();
+		  //System.out.print("key is " + key + "\n");
+		  numBuckets++;
+		  next = tup;
+		  //System.out.print(tup.getField(0) + "  " +  tup.getField(1) + "\n");
+		  consumed = false;
+		  return true;
 	  }
     //throw new UnsupportedOperationException("Not implemented");
   }
@@ -114,13 +118,8 @@ public class IndexScan extends Iterator {
    * @throws IllegalStateException if no more tuples
    */
   public Tuple getNext() {
-	  if(hasNext() == true){
-		 consumed = true;
-		 return next;
-	  }
-	  else{
-		  throw new IllegalStateException("NO MORE TUPLES");
-	  }
+	consumed = true;
+	return next;
     //throw new UnsupportedOperationException("Not implemented");
   }
 
@@ -128,6 +127,7 @@ public class IndexScan extends Iterator {
    * Gets the key of the last tuple returned.
    */
   public SearchKey getLastKey() {
+	  //System.out.print("key2 is " + key.toString() + "\n");
 	  return  key;
     //throw new UnsupportedOperationException("Not implemented");
   }
