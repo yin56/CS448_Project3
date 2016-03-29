@@ -17,7 +17,7 @@ public class Projection extends Iterator {
    * Constructs a projection, given the underlying iterator and field numbers.
    */
   public Projection(Iterator iter, Integer... fields) {
-	  System.out.print("Constructing Projection\n");
+	  //System.out.print("Constructing Projection\n");
 	  this.field = fields;
 	  this.it = iter;
 	  
