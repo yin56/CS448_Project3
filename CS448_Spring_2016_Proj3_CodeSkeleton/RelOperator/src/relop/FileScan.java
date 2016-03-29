@@ -15,8 +15,10 @@ public class FileScan extends Iterator {
 	private HeapScan scan;	
 	private boolean isOpen;
 	private int indentDepth;
-	private RID mostRecentRID;
+	private static RID mostRecentRID;
 	private HeapFile file;
+	private Tuple next;
+	private boolean consumed;
 	
 	
   /**
@@ -26,8 +28,11 @@ public class FileScan extends Iterator {
 	  this.schema = schema;
 	  this.file = file;
 	  this.scan = file.openScan();
+	  //this.next = new Tuple(schema);
+	  //this.mostRecentRID = new RID();
 	  isOpen = true;
 	  indentDepth = 0;
+	  consumed = true;
   }
 
   /**
@@ -46,6 +51,7 @@ public class FileScan extends Iterator {
   public void restart() {
 	  super.setSchema(schema);
 	  scan = file.openScan();
+	  consumed = true;
 	  isOpen = true;
 	  indentDepth = 0;
   }
@@ -69,7 +75,31 @@ public class FileScan extends Iterator {
    * Returns true if there are more tuples, false otherwise.
    */
   public boolean hasNext() {
-	  return scan.hasNext();
+	  if(!consumed){
+		  return true;
+	  }
+	  if(scan.hasNext() == false){
+		  //System.out.print("There are more recoreds to scan\n");
+		  return false;
+	  }
+	  else{
+		  //throw new IllegalStateException("No more tuples");
+		  //System.out.print("No more recoreds to scan\n");
+		  this.mostRecentRID = new RID();
+		  scan.getNext(mostRecentRID);
+		  //System.out.print("mosRecentRID2:" + mostRecentRID + "\n");
+		  Tuple tuple = new Tuple(schema, file.selectRecord(mostRecentRID));
+		  next = tuple;
+		  
+		  //mostRecentRID = rid;
+		  //mostRecentRID.copyRID(rid);
+		  
+		  consumed = false;
+		  return true;
+		
+	  }
+	  
+	  //return scan.hasNext();
   }
 
   /**
@@ -78,6 +108,11 @@ public class FileScan extends Iterator {
    * @throws IllegalStateException if no more tuples
    */
   public Tuple getNext() {
+	  consumed = true;
+	  return next;
+	 
+	 // 
+	  /*
 	  	    
 	  if (hasNext() == false){
 		  throw new IllegalStateException("No more tuples");
@@ -89,7 +124,7 @@ public class FileScan extends Iterator {
 		  		  
 		  mostRecentRID = rid;
 		  return tuple;
-	  }
+	  }*/
 	  
   }
 
@@ -97,7 +132,8 @@ public class FileScan extends Iterator {
    * Gets the RID of the last tuple returned.
    */
   public RID getLastRID() {
-	  return mostRecentRID;
+	  //System.out.print("mosRecentRID:" + mostRecentRID + "\n");
+	  return this.mostRecentRID;
   }
   
   public HeapFile returnHeapFile(){
